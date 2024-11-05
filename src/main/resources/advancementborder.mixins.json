@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "net.reimaden.advancementborder.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "PlayerAdvancementTrackerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
