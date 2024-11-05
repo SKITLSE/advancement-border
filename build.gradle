@@ -101,7 +101,7 @@ static def addMinecraftVersions(versionsContainer) {
 publishMods {
     changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText
     type = STABLE
-    file = jar.archiveFile
+    file = remapJar.archiveFile
     additionalFiles.from(sourcesJar.archiveFile)
     modLoaders.add("fabric")
     version = project.version
