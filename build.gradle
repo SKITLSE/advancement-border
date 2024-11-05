@@ -114,6 +114,10 @@ publishMods {
         projectDescription = providers.fileContents(layout.projectDirectory.file("README.md")).asText
 
         requires {
+            // Fabric API
+            id = "P7dR8mSH"
+        }
+        requires {
             // Configuration
             id = "3WjjSM5O"
             version = "Rm3y01YV"
@@ -131,7 +135,7 @@ publishMods {
         clientRequired = false
         serverRequired = true
 
-        requires("configuration")
+        requires("fabric-api", "configuration")
         optional("modmenu")
     }
 }
