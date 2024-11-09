@@ -3,7 +3,7 @@
   "package": "net.reimaden.advancementborder.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "PlayerAdvancementTrackerMixin"
+    "PlayerAdvancementsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

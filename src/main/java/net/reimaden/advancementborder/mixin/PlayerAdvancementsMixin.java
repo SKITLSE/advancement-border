@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Mixin(PlayerAdvancements.class)
-public abstract class PlayerAdvancementTrackerMixin {
+public abstract class PlayerAdvancementsMixin {
     @Shadow private ServerPlayer player;
     @Shadow @Final private PlayerList playerList;
 
