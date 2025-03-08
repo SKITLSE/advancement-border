@@ -101,12 +101,23 @@ static def addMinecraftVersions(versionsContainer) {
 
 publishMods {
     changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText
+            .map { fullChangelog ->
+                def currentVersion = project.mod_version.toString()
+                def versionPattern = /###\s($currentVersion)[\s\S]*?(?=###|\Z)/
+                def matcher = (fullChangelog =~ versionPattern)
+                if (matcher.find()) {
+                    return matcher.group(0).replaceFirst("^###\\s" + currentVersion + "\\s*", "").trim()
+                } else {
+                    return "No changelog available"
+                }
+            }
     type = STABLE
     file = remapJar.archiveFile
     additionalFiles.from(sourcesJar.archiveFile)
     modLoaders.add("fabric")
     version = project.version
     displayName = "Advancement Border " + project.mod_version
+    // dryRun = true
 
     modrinth {
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
