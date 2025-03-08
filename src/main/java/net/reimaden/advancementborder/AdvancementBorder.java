@@ -5,7 +5,6 @@ import dev.toma.configuration.config.ConfigHolder;
 import dev.toma.configuration.config.format.ConfigFormats;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -75,8 +74,9 @@ public final class AdvancementBorder implements ModInitializer {
             case CHAT, ACTION_BAR -> true;
             case NONE -> false;
         }) {
+            int color = Integer.parseInt(config.notificationColor.substring(1), 16);
             playerList.broadcastSystemMessage(
-                    Component.translatable(AdvancementBorder.MOD_ID + key, args).withStyle(ChatFormatting.AQUA),
+                    Component.translatable(AdvancementBorder.MOD_ID + key, args).withColor(color),
                     config.notificationStyle.equals(AdvancementBorderConfig.NotificationStyle.ACTION_BAR)
             );
         }

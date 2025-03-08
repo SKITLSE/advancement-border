@@ -36,6 +36,12 @@ public final class AdvancementBorderConfig {
     public boolean detailedNotifications = false;
 
     @Configurable
+    @Configurable.Comment(value = "Color of world border notifications in hexadecimal", localize = true)
+    @Configurable.Gui.ColorValue
+    @Configurable.StringPattern(value = "^#[A-Fa-f0-9]{6}$", errorDescriptor = "config.advancementborder.option.notificationColor.error")
+    public String notificationColor = "#55FFFF"; // Minecraft Aqua
+
+    @Configurable
     @Configurable.Comment(value = "Whether each player contributes separately instead of using a global list of advancements", localize = true)
     public boolean perPlayerAdvancements = false;
 
