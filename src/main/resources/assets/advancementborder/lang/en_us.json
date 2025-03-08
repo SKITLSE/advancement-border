@@ -1,4 +1,5 @@
 {
+  "modmenu.descriptionTranslation.advancementborder": "Expands the world border based on completed advancements.",
   "config.screen.advancementborder": "Advancement Border",
   "config.advancementborder.option.increaseAmountTask": "Increase from Tasks",
   "config.advancementborder.option.increaseAmountTask.comment.0": "How much the world border should expand with each task advancement",
