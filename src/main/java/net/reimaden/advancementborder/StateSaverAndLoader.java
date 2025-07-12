@@ -33,14 +33,17 @@ public final class StateSaverAndLoader extends SavedData {
 
     private static StateSaverAndLoader createFromNbt(CompoundTag nbt, HolderLookup.Provider registryLookup) {
         StateSaverAndLoader state = new StateSaverAndLoader();
-            if (tag.contains(ADVANCEMENTS_KEY) && tag.get(ADVANCEMENTS_KEY) instanceof ListTag listTag) {
-                for (int i = 0; i < listTag.size(); i++) {
-                    ResourceLocation.parse(listTag.getString(i))
-                        .ifPresent(state.completedAdvancements::add);
-                }
-            }
-            state.isFreshWorld = tag.getBoolean(FRESH_WORLD_KEY).orElse(true);
-            return state;
+        ListTag advancementList = (ListTag) nbt.get(ADVANCEMENTS_KEY);
+
+        for (int i = 0; i < advancementList.size(); i++) {
+            ResourceLocation id = ResourceLocation.parse(advancementList.getString(i))
+    .ifPresent(id -> state.completedAdvancements.add(id));
+
+            state.completedAdvancements.add(id);
+        }
+        state.isFreshWorld = nbt.getBoolean(FRESH_WORLD_KEY).orElse(true); // или false по умолчанию
+
+        return state;
     }
 
     public static StateSaverAndLoader getServerState(MinecraftServer server) {
