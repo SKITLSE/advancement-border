@@ -1,59 +1,70 @@
 package net.reimaden.advancementborder;
 
 import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
+import java.util.Set;
 
 public final class StateSaverAndLoader extends SavedData {
-    private static final String ADVANCEMENTS_KEY = "completedAdvancements";
-    private static final String FRESH_WORLD_KEY = "isFreshWorld";
-    public HashSet<ResourceLocation> completedAdvancements = new HashSet<>();
-    public boolean isFreshWorld = true;
 
+    // === keys ===
+    private static final String ADVANCEMENTS_KEY = "completedAdvancements";
+    private static final String FRESH_WORLD_KEY   = "isFreshWorld";
+
+    // === state ===
+    private final Set<ResourceLocation> completedAdvancements = new HashSet<>();
+    private boolean isFreshWorld = true;
+
+    /* -------------------------------------------------------------
+     *  SAVE
+     * ------------------------------------------------------------- */
     @Override
-    public CompoundTag save(CompoundTag nbt) {
-        ListTag advancementList = new ListTag();
-        for (ResourceLocation advancement : completedAdvancements) {
-            advancementList.add(StringTag.valueOf(advancement.toString()));
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
+        ListTag list = new ListTag();
+        for (ResourceLocation rl : completedAdvancements) {
+            list.add(StringTag.valueOf(rl.toString()));
         }
-        nbt.put(ADVANCEMENTS_KEY, advancementList);
-        nbt.putBoolean(FRESH_WORLD_KEY, isFreshWorld);
-        return nbt;
+        tag.put(ADVANCEMENTS_KEY, list);
+        tag.putBoolean(FRESH_WORLD_KEY, isFreshWorld);
+        return tag;
     }
 
-    private static StateSaverAndLoader createFromNbt(CompoundTag nbt, HolderLookup.Provider registryLookup) {
+    /* -------------------------------------------------------------
+     *  LOAD
+     * ------------------------------------------------------------- */
+    public static StateSaverAndLoader load(CompoundTag tag, HolderLookup.Provider provider) {
         StateSaverAndLoader state = new StateSaverAndLoader();
-        ListTag advancementList = (ListTag) nbt.get(ADVANCEMENTS_KEY);
 
-        for (int i = 0; i < advancementList.size(); i++) {
-            ResourceLocation id = ResourceLocation.parse(advancementList.getString(i))
-    .ifPresent(id -> state.completedAdvancements.add(id));
-
-            state.completedAdvancements.add(id);
+        ListTag list = tag.getList(ADVANCEMENTS_KEY, Tag.TAG_STRING);
+        for (int i = 0; i < list.size(); i++) {
+            // parse() бросает при недопустимой строке; можно заменить tryParse, если хочешь мягче
+            state.completedAdvancements.add(ResourceLocation.parse(list.getString(i)));
         }
-        state.isFreshWorld = nbt.getBoolean(FRESH_WORLD_KEY).orElse(true); // или false по умолчанию
 
+        state.isFreshWorld = tag.getBoolean(FRESH_WORLD_KEY);
         return state;
     }
 
-    public static StateSaverAndLoader getServerState(MinecraftServer server) {
-        ServerLevel world = server.overworld();
-        DimensionDataStorage manager = world.getDataStorage();
-        return manager.computeIfAbsent(
-            tag -> createFromNbt(tag, world.registryAccess()),
-            StateSaverAndLoader::new,
-            AdvancementBorder.MOD_ID
-        );
+    /* -------------------------------------------------------------
+     *  Factory & accessor
+     * ------------------------------------------------------------- */
+    private static final SavedData.Factory<StateSaverAndLoader> TYPE =
+            new SavedData.Factory<>(StateSaverAndLoader::new, StateSaverAndLoader::load, null);
+
+    public static StateSaverAndLoader get(ServerLevel level) {
+        return level.getDataStorage().computeIfAbsent(TYPE, AdvancementBorder.MOD_ID);
     }
 
+    // удобный метод, чтобы пометить данные «грязными»
+    public boolean addCompleted(ResourceLocation id) {
+        boolean changed = completedAdvancements.add(id);
+        if (changed) setDirty();
+        return changed;
+    }
 }
