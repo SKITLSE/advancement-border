@@ -1,15 +1,16 @@
 package net.reimaden.advancementborder;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
-import net.minecraft.world.level.saveddata.SavedDataTypes;
 import net.minecraft.world.level.storage.DimensionDataStorage;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
@@ -30,10 +31,8 @@ public final class StateSaverAndLoader extends SavedData {
         return nbt;
     }
 
-    public static final SavedDataType<StateSaverAndLoader> TYPE = new SavedDataType<>(
-        StateSaverAndLoader::new,
-        tag -> {
-            StateSaverAndLoader state = new StateSaverAndLoader();
+    private static StateSaverAndLoader createFromNbt(CompoundTag nbt, HolderLookup.Provider registryLookup) {
+        StateSaverAndLoader state = new StateSaverAndLoader();
             if (tag.contains(ADVANCEMENTS_KEY) && tag.get(ADVANCEMENTS_KEY) instanceof ListTag listTag) {
                 for (int i = 0; i < listTag.size(); i++) {
                     ResourceLocation.parse(listTag.getString(i))
@@ -42,12 +41,16 @@ public final class StateSaverAndLoader extends SavedData {
             }
             state.isFreshWorld = tag.getBoolean(FRESH_WORLD_KEY).orElse(true);
             return state;
-        }
-    );
+    }
 
     public static StateSaverAndLoader getServerState(MinecraftServer server) {
         ServerLevel world = server.overworld();
         DimensionDataStorage manager = world.getDataStorage();
-        return manager.computeIfAbsent(TYPE, AdvancementBorder.MOD_ID);
+        return manager.computeIfAbsent(
+            tag -> createFromNbt(tag, world.registryAccess()),
+            StateSaverAndLoader::new,
+            AdvancementBorder.MOD_ID
+        );
     }
+
 }
