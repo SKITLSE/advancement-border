@@ -42,15 +42,14 @@ public final class StateSaverAndLoader extends SavedData {
         return state;
     }
 
-    private static final Factory<StateSaverAndLoader> TYPE = new Factory<>(
-            StateSaverAndLoader::new,
-            StateSaverAndLoader::createFromNbt,
-            null
-    );
-
     public static StateSaverAndLoader getServerState(MinecraftServer server) {
         ServerLevel world = server.overworld();
         DimensionDataStorage manager = world.getDataStorage();
-        return manager.computeIfAbsent(TYPE, AdvancementBorder.MOD_ID);
+        return manager.computeIfAbsent(
+            tag -> createFromNbt(tag, world.registryAccess()),
+            StateSaverAndLoader::new,
+            AdvancementBorder.MOD_ID
+        );
     }
+
 }
