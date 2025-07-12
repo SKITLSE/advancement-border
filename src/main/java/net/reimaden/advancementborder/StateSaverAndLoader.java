@@ -1,5 +1,7 @@
 package net.reimaden.advancementborder;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -8,6 +10,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -46,12 +49,28 @@ public final class StateSaverAndLoader extends SavedData {
     }
 
     /* -------------------- тип данных для DataStorage -------------------- */
+    private static final Codec<StateSaverAndLoader> CODEC =
+            RecordCodecBuilder.create(inst -> inst.group(
+                    // Списком строк, каждая строка = id ачивки
+                    ResourceLocation.CODEC.listOf().fieldOf("completedAdvancements")
+                            .forGetter(s -> List.copyOf(s.completedAdvancements)),
+                    // Булево, по умолчанию true
+                    Codec.BOOL.fieldOf("isFreshWorld").orElse(true)
+                            .forGetter(s -> s.isFreshWorld)
+            ).apply(inst, (list, fresh) -> {
+                StateSaverAndLoader s = new StateSaverAndLoader();
+                s.completedAdvancements.addAll(list);
+                s.isFreshWorld = fresh;
+                return s;
+            }));
+
+    /* ---------- SavedDataType ---------- */
     private static final SavedDataType<StateSaverAndLoader> TYPE =
             new SavedDataType<>(
                     "advancementborder_state",
-                    ctx -> new StateSaverAndLoader(),
-                    ctx -> null,   // Codec не нужен
-                    null           // dataFixType → null, чтобы не тянуть серверные классы
+                    ctx -> new StateSaverAndLoader(),   // конструктор «пустого» состояния
+                    ctx -> CODEC,                       // теперь НЕ null
+                    null                                // dataFixType можно оставить null
             );
 
 
