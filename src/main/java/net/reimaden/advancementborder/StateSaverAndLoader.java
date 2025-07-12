@@ -1,16 +1,15 @@
 package net.reimaden.advancementborder;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.world.level.saveddata.SavedDataTypes;
 import net.minecraft.world.level.storage.DimensionDataStorage;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
@@ -21,7 +20,7 @@ public final class StateSaverAndLoader extends SavedData {
     public boolean isFreshWorld = true;
 
     @Override
-    public @NotNull CompoundTag save(CompoundTag nbt, HolderLookup.Provider registryLookup) {
+    public CompoundTag save(CompoundTag nbt) {
         ListTag advancementList = new ListTag();
         for (ResourceLocation advancement : completedAdvancements) {
             advancementList.add(StringTag.valueOf(advancement.toString()));
@@ -31,25 +30,24 @@ public final class StateSaverAndLoader extends SavedData {
         return nbt;
     }
 
-    private static StateSaverAndLoader createFromNbt(CompoundTag nbt, HolderLookup.Provider registryLookup) {
-        StateSaverAndLoader state = new StateSaverAndLoader();
-        ListTag advancementList = nbt.getList(ADVANCEMENTS_KEY, Tag.TAG_STRING);
-        for (int i = 0; i < advancementList.size(); i++) {
-            ResourceLocation id = ResourceLocation.parse(advancementList.getString(i));
-            state.completedAdvancements.add(id);
+    public static final SavedDataType<StateSaverAndLoader> TYPE = new SavedDataType<>(
+        StateSaverAndLoader::new,
+        tag -> {
+            StateSaverAndLoader state = new StateSaverAndLoader();
+            if (tag.contains(ADVANCEMENTS_KEY) && tag.get(ADVANCEMENTS_KEY) instanceof ListTag listTag) {
+                for (int i = 0; i < listTag.size(); i++) {
+                    ResourceLocation.parse(listTag.getString(i))
+                        .ifPresent(state.completedAdvancements::add);
+                }
+            }
+            state.isFreshWorld = tag.getBoolean(FRESH_WORLD_KEY).orElse(true);
+            return state;
         }
-        state.isFreshWorld = nbt.getBoolean(FRESH_WORLD_KEY);
-        return state;
-    }
+    );
 
     public static StateSaverAndLoader getServerState(MinecraftServer server) {
         ServerLevel world = server.overworld();
         DimensionDataStorage manager = world.getDataStorage();
-        return manager.computeIfAbsent(
-            tag -> createFromNbt(tag, world.registryAccess()),
-            StateSaverAndLoader::new,
-            AdvancementBorder.MOD_ID
-        );
+        return manager.computeIfAbsent(TYPE, AdvancementBorder.MOD_ID);
     }
-
 }
